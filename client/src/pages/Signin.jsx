@@ -1,21 +1,24 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useDispatch, useSelector } from 'react-redux';
+import { signInStart, signInSuccess, signInFailure } from '../redux/user/userSlice';
 
 export const Signin = () => {
-  const [formData, setFormData] = useState({  email: "", password: "" });
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
 
+  // hooks
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.user);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
-    console.log(formData);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Show loading state
+    dispatch(signInStart()); 
+
     try {
       const res = await fetch("/api/auth/signin", {
         method: "POST",
@@ -28,19 +31,20 @@ export const Signin = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        // Handle error from backend
-        setLoading(false);
-        setError(data.message || "Something went wrong");
+        // Dispatch failure with error message from backend
+        dispatch(signInFailure(data.message || "Something went wrong"));
         return;
       }
 
-      setError(null);
-      setLoading(false);
+      // Dispatch success with user data
+      dispatch(signInSuccess(data));
+
+      // Navigate to home after successful login
       navigate("/");
     } catch (err) {
-      setLoading(false);
       console.log(err);
-      setError("Failed to register. Please try again later.");
+      // Dispatch failure with generic error
+      dispatch(signInFailure("Failed to sign in. Please try again later."));
     }
   };
 
@@ -49,13 +53,13 @@ export const Signin = () => {
       <h1 className="text-3xl text-center font-semibold my-7">Sign In</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-
         <input
           type="email"
           placeholder="email"
           className="border p-3 rounded-lg"
           id="email"
           onChange={handleChange}
+          value={formData.email}
         />
 
         <input
@@ -64,21 +68,25 @@ export const Signin = () => {
           className="border p-3 rounded-lg"
           id="password"
           onChange={handleChange}
+          value={formData.password}
         />
 
-        <button className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80">
+        <button
+          className="bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
+          disabled={loading}
+        >
           {loading ? "Loading..." : "Sign In"}
         </button>
       </form>
 
       <div className="flex gap-2 mt-5">
-        <Link to="/sign-up">
-          <p>Dont have an account ?</p>
-          <span className="text-blue-700 cursor-pointer">Sign Up</span>
+        <p>Dont have an account?</p>
+        <Link to="/sign-up" className="text-blue-700 cursor-pointer">
+          Sign Up
         </Link>
       </div>
 
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p className="text-red-500 mt-3">{error}</p>}
     </div>
   );
 };
