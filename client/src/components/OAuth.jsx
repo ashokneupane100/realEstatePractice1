@@ -2,13 +2,11 @@ import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
 import { app } from '../firebase';
 import { useDispatch } from 'react-redux';
 import { signInSuccess } from '../redux/user/userSlice';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function OAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-
   const handleGoogleClick = async () => {
     try {
       const provider = new GoogleAuthProvider();
@@ -28,26 +26,19 @@ export default function OAuth() {
         }),
       });
       const data = await res.json();
-
-      // Preserve redirect path before sign-in
-      const redirectPath = sessionStorage.getItem("redirectPath") || '/';
-      sessionStorage.removeItem("redirectPath");
-
-      // Dispatch sign-in success action and navigate to preserved path
       dispatch(signInSuccess(data));
-      navigate(redirectPath);
+      navigate('/');
     } catch (error) {
       console.log('could not sign in with google', error);
     }
   };
-
   return (
     <button
       onClick={handleGoogleClick}
       type='button'
       className='bg-red-700 text-white p-3 rounded-lg uppercase hover:opacity-95'
     >
-      Continue with Google
+      Continue with google
     </button>
   );
 }

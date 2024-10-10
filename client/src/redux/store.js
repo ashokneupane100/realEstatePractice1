@@ -9,6 +9,7 @@ const persistConfig = {
   key: 'root',
   storage,
   version: 1,
+  whitelist: ['user'], // only persist user
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -17,7 +18,9 @@ export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: false,
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST'],
+      },
     }),
 });
 
